@@ -38,5 +38,5 @@ los detecta. Esta ficha es el registro de esas decisiones: se versiona junto al 
 
 | Fecha | Decisión | Motivo |
 |---|---|---|
-| | Umbral de decisión elegido por costo, no 0.5 | Un FN cuesta el doble que un FP |
-| | El modelo se selecciona por F1 de validación cruzada | Test queda reservado para la evaluación final |
+| 2026-11-11 | Umbral 0.30 elegido por costo con predicciones out-of-fold de train | Un FN cuesta el doble que un FP; costo en test S/ 43.33 por cliente |
+| 2026-11-11 | Seleccionar random_forest por F1 de validación cruzada (0.6900) | Test queda reservado para la evaluación final; gradient_boosting no cambia el ganador |

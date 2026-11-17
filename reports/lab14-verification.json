@@ -1,0 +1,35 @@
+{
+  "experiment_id": "149578634287152396",
+  "runs": [
+    {
+      "name": "gradient_boosting",
+      "status": "FINISHED",
+      "run_id": "aa328931c3f34dfea45a7af034e8de91"
+    },
+    {
+      "name": "xgboost",
+      "status": "FINISHED",
+      "run_id": "082361aabfd74b25aabbf3e3198beb1b"
+    },
+    {
+      "name": "random_forest",
+      "status": "FINISHED",
+      "run_id": "08328fd70de74acc8a271b3735796158"
+    },
+    {
+      "name": "logistic",
+      "status": "FINISHED",
+      "run_id": "5ce690c59868440b817babaa2645174a"
+    },
+    {
+      "name": "baseline",
+      "status": "FINISHED",
+      "run_id": "56a8bb8b8f2347c1b28f8c6544dbc711"
+    }
+  ],
+  "champion": "4",
+  "challenger": "4",
+  "failed_version": "3",
+  "champion_retained_after_failure": "2",
+  "final_gate": "passed"
+}

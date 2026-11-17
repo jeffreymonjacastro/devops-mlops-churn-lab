@@ -1,5 +1,55 @@
 # MLOps Churn Lab
 
+## Laboratorio 14.1: resultados locales de las fases 3 y 4
+
+Ejecución del 2026-11-11 con 240 clientes de entrenamiento, 60 de test y
+validación cruzada estratificada de 5 folds. El test no participa en la selección
+del modelo ni del umbral.
+
+| Candidato | F1 CV | ROC-AUC CV |
+|---|---|---|
+| logistic | 0.6666 | 0.7315 |
+| random_forest | 0.6900 | 0.7326 |
+| xgboost | 0.6829 | 0.7100 |
+| gradient_boosting (reto obligatorio) | 0.6476 | 0.6858 |
+
+El cuarto candidato no cambia el ganador: se elige random_forest por F1 CV.
+El baseline constante positivo obtiene F1 CV 0.6629.
+
+El umbral elegido por costo con predicciones out-of-fold de train es 0.30.
+En test: F1 0.7013, precision 0.5745, recall 0.9000, ROC-AUC 0.7989 y costo
+S/ 43.33 por cliente, frente a S/ 50.00 al contactar a todos. Los cuatro checks
+del quality gate pasan. Las métricas describen este dataset pequeño, no una
+validación de resultados en producción.
+
+Para reproducir desde la raíz del repositorio:
+
+```powershell
+conda activate churn-lab
+python src/validate_data.py
+python src/data_prep.py
+python src/train.py --model all
+python src/evaluate_and_register.py
+pytest tests/ -q
+mlflow ui --backend-store-uri mlruns --port 5001
+```
+
+Para las capturas, abre http://localhost:5001:
+
+1. En **Experiments**, abre `churn-prediction-fintech`. Selecciona los cinco runs
+   (baseline y cuatro candidatos) y abre la comparación o vista de gráficos.
+   Muestra las métricas `cv_f1_mean`, `cv_f1_std` y `cv_roc_auc_mean`.
+2. En **Models**, abre `churn-predictor`. Captura las versiones y sus tags
+   `quality_gate`, `test_f1`, `threshold`, junto con los aliases `champion` y
+   `challenger`. Los números de versión dependen de las evaluaciones ejecutadas.
+
+El entorno del laboratorio fija MLflow 2.22.1, como las capturas de referencia.
+Cada nueva evaluación crea
+una versión real; no hace falta repetir entrenamientos para llenar la tabla.
+
+Los resultados detallados están en `reports/evaluation_report.json`,
+`reports/model_card.md` y `data/production_model_info.json`.
+
 Punto de partida de los laboratorios 14.1 y 14.2: predicción de churn para una fintech siguiendo CRISP-ML(Q).
 
 El proyecto funciona, sus tests pasan y tiene un bug que solo aparece en producción. Encontrarlo y eliminarlo es el primer paso del laboratorio.
