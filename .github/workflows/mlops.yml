@@ -142,7 +142,10 @@ jobs:
           fi
           echo "El candidato no pasó el quality gate. Se conserva el champion de la corrida $RUN_ID." \
             >> "$GITHUB_STEP_SUMMARY"
-          gh run download "$RUN_ID" --name production-artifacts --dir .
+          PREVIOUS_DIR=$(mktemp -d)
+          gh run download "$RUN_ID" --name production-artifacts --dir "$PREVIOUS_DIR"
+          cp "$PREVIOUS_DIR/data/production_model.pkl" data/production_model.pkl
+          cp "$PREVIOUS_DIR/data/production_model_info.json" data/production_model_info.json
           test -f data/production_model.pkl
           test -f data/production_model_info.json
       - name: Resumen de evaluación
