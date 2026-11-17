@@ -18,6 +18,10 @@ on:
       - '.github/workflows/mlops.yml'
   workflow_dispatch:
 
+permissions:
+  actions: read
+  contents: read
+
 env:
   PYTHON_VERSION: '3.10'
   IMAGE_NAME: churn-predictor
@@ -122,7 +126,25 @@ jobs:
           name: train-artifacts
           path: .
       - name: Evaluar, aplicar quality gate y registrar
+        id: evaluate_model
+        continue-on-error: true
         run: python src/evaluate_and_register.py
+      - name: Reutilizar champion anterior si el candidato no pasa el quality gate
+        if: steps.evaluate_model.outcome == 'failure'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          RUN_ID=$(gh run list --workflow mlops.yml --branch main --status success --limit 1 \
+            --json databaseId --jq '.[0].databaseId')
+          if [ -z "$RUN_ID" ]; then
+            echo "::error::El candidato no pasó el quality gate y no hay un champion previo exitoso."
+            exit 1
+          fi
+          echo "El candidato no pasó el quality gate. Se conserva el champion de la corrida $RUN_ID." \
+            >> "$GITHUB_STEP_SUMMARY"
+          gh run download "$RUN_ID" --name production-artifacts --dir .
+          test -f data/production_model.pkl
+          test -f data/production_model_info.json
       - name: Resumen de evaluación
         if: always()
         run: |
