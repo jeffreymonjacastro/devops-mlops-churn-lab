@@ -36,3 +36,9 @@ def test_out_of_range_fails():
 def test_missing_column_fails():
     df = load_raw(load_config()).drop(columns=["tenure_months"])
     assert "tenure_months:exists" in _failed(df)
+
+
+def test_complete_duplicate_row_fails():
+    df = load_raw(load_config())
+    df.loc[len(df)] = df.iloc[0]
+    assert "duplicate_rows" in _failed(df)

@@ -28,6 +28,9 @@ def validate(df: pd.DataFrame, cfg: dict) -> list:
         f"{len(df)} filas (mínimo {data_cfg['min_rows']})",
     )
 
+    full_duplicates = int(df.duplicated().sum())
+    add("duplicate_rows", full_duplicates == 0, f"{full_duplicates} filas completas duplicadas")
+
     id_col = data_cfg["id_column"]
     if id_col in df.columns:
         dups = int(df[id_col].duplicated().sum())

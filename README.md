@@ -1,26 +1,59 @@
 # MLOps Churn Lab
 
-## Laboratorio 14.1: resultados locales de las fases 3 y 4
+## Laboratorio 14.1: resultados locales de las fases 1 a 4
 
-Ejecución del 2026-11-11 con 240 clientes de entrenamiento, 60 de test y
+Ejecución del 2026-11-17 con 240 clientes de entrenamiento, 60 de test y
 validación cruzada estratificada de 5 folds. El test no participa en la selección
-del modelo ni del umbral.
+del modelo ni del umbral. Se comparan cinco runs: baseline y cuatro candidatos.
 
-| Candidato | F1 CV | ROC-AUC CV |
-|---|---|---|
-| logistic | 0.6666 | 0.7315 |
-| random_forest | 0.6900 | 0.7326 |
-| xgboost | 0.6829 | 0.7100 |
-| gradient_boosting (reto obligatorio) | 0.6476 | 0.6858 |
+| Candidato                            | F1 CV  | ROC-AUC CV |
+| ------------------------------------ | ------ | ---------- |
+| logistic                             | 0.6666 | 0.7315     |
+| random_forest                        | 0.6900 | 0.7326     |
+| xgboost                              | 0.6829 | 0.7100     |
+| gradient_boosting (reto obligatorio) | 0.6476 | 0.6858     |
 
-El cuarto candidato no cambia el ganador: se elige random_forest por F1 CV.
-El baseline constante positivo obtiene F1 CV 0.6629.
+`gradient_boosting` es el cuarto candidato obligatorio. No cambia el ganador:
+se elige `random_forest` por F1 CV. El baseline constante positivo obtiene F1
+CV 0.6629.
 
 El umbral elegido por costo con predicciones out-of-fold de train es 0.30.
 En test: F1 0.7013, precision 0.5745, recall 0.9000, ROC-AUC 0.7989 y costo
-S/ 43.33 por cliente, frente a S/ 50.00 al contactar a todos. Los cuatro checks
-del quality gate pasan. Las métricas describen este dataset pequeño, no una
-validación de resultados en producción.
+S/ 43.33 por cliente, frente a S/ 50.00 al contactar a todos. F1, ROC-AUC y
+costo pasan el quality gate. Al añadir `contract_type`, la brecha máxima de
+recall es 0.50 (límite 0.25), así que el modelo queda como `@challenger` y no
+se promueve a `@champion`. El champion previo se conserva. Las métricas describen
+este dataset pequeño, no una validación de resultados en producción.
+
+### Reto opcional: costos FN=500 y FP=50
+
+Con `cost_fn: 500` y `cost_fp: 50`, el umbral elegido baja a 0.05. En test, el
+modelo predice churn para todos los clientes: costo S/ 25.00, igual que la
+política de contactar a todos. Falla `costo_vs_sin_modelo`, que exige un costo
+estrictamente menor que S/ 25.00; el modelo no aporta ahorro frente a la
+política trivial de menor costo. F1 es 0.6667, recall 1.0000 y ROC-AUC 0.7989.
+El reporte reproducible está en
+[`reports/evaluation_report_cost_fn500_fp50.json`](reports/evaluation_report_cost_fn500_fp50.json).
+
+### Reto opcional: recall por tipo de contrato
+
+| Tipo de contrato | Clientes de test | Recall |
+| ---------------- | ---------------: | -----: |
+| Month-to-Month   |               33 | 1.0000 |
+| One Year         |               16 | 0.5000 |
+| Two Year         |               11 | 0.6667 |
+
+Brecha máxima: 1.0000 - 0.5000 = **0.5000**, por encima del máximo permitido
+de 0.25. El check `recall_gap` falla y bloquea la promoción. Hace falta revisar
+errores y cantidad de positivos por segmento, y evaluar más datos o una política
+de retención que reduzca la brecha antes de cambiar el límite del gate.
+
+### Reto opcional: duplicados completos
+
+El contrato revisa `duplicate_rows` además de la unicidad de `customer_id`.
+El CSV actual tiene cero filas completas duplicadas: `python src/validate_data.py`
+reporta **24/24 checks OK**. El test `test_complete_duplicate_row_fails` agrega
+una copia exacta de una fila y exige que el check la rechace.
 
 Para reproducir desde la raíz del repositorio:
 
@@ -116,21 +149,21 @@ uvicorn app.main:app --port 8000      # http://localhost:8000/docs
 
 ## Dataset
 
-| Columna | Tipo | Descripción |
-|---|---|---|
-| `customer_id` | texto | Identificador del cliente |
-| `gender` | categoría | Male, Female |
-| `senior_citizen` | 0/1 | Adulto mayor |
-| `tenure_months` | entero | Meses como cliente |
-| `contract_type` | categoría | Month-to-Month, One Year, Two Year |
-| `internet_service` | categoría | Fiber, DSL, None |
-| `monthly_charges` | decimal | Cargo mensual |
-| `support_tickets_last_6m` | entero | Tickets de soporte en 6 meses |
-| `churn` | Yes/No | El cliente abandonó (target) |
+| Columna                   | Tipo      | Descripción                        |
+| ------------------------- | --------- | ---------------------------------- |
+| `customer_id`             | texto     | Identificador del cliente          |
+| `gender`                  | categoría | Male, Female                       |
+| `senior_citizen`          | 0/1       | Adulto mayor                       |
+| `tenure_months`           | entero    | Meses como cliente                 |
+| `contract_type`           | categoría | Month-to-Month, One Year, Two Year |
+| `internet_service`        | categoría | Fiber, DSL, None                   |
+| `monthly_charges`         | decimal   | Cargo mensual                      |
+| `support_tickets_last_6m` | entero    | Tickets de soporte en 6 meses      |
+| `churn`                   | Yes/No    | El cliente abandonó (target)       |
 
 ## Qué vas a construir
 
-| Laboratorio | Fases CRISP-ML(Q) | Resultado |
-|---|---|---|
-| 14.1 | 1 a 4: negocio y datos, preparación, modelado, evaluación | Contrato de datos, Pipeline de scikit-learn, validación cruzada, umbral por costo, modelo `@champion` |
-| 14.2 | 5 y 6: despliegue, monitoreo | API sin skew, imagen en Docker Hub, drift, reentrenamiento automático |
+| Laboratorio | Fases CRISP-ML(Q)                                         | Resultado                                                                                             |
+| ----------- | --------------------------------------------------------- | ----------------------------------------------------------------------------------------------------- |
+| 14.1        | 1 a 4: negocio y datos, preparación, modelado, evaluación | Contrato de datos, Pipeline de scikit-learn, validación cruzada, umbral por costo, modelo `@champion` |
+| 14.2        | 5 y 6: despliegue, monitoreo                              | API sin skew, imagen en Docker Hub, drift, reentrenamiento automático                                 |

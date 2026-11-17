@@ -47,9 +47,9 @@ quality_gate:
   min_f1: 0.60
   min_roc_auc: 0.70
   must_beat_baseline: true
-  # Diferencia máxima de recall entre grupos (gender, senior_citizen)
+  # Diferencia máxima de recall entre grupos (gender, senior_citizen, contract_type)
   max_recall_gap: 0.25
-  slices: [gender, senior_citizen]
+  slices: [gender, senior_citizen, contract_type]
 
 # ── Fase 6 · Monitoreo ──────────────────────────────────────────────────────
 monitoring:
