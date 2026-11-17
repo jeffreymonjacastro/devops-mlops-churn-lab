@@ -41,7 +41,12 @@ jobs:
             exit 1
           fi
           echo "Usando artefactos de la corrida $RUN_ID"
-          gh run download "$RUN_ID" --name production-artifacts --dir .
+          ARTIFACT_DIR=$(mktemp -d)
+          gh run download "$RUN_ID" --name production-artifacts --dir "$ARTIFACT_DIR"
+          cp "$ARTIFACT_DIR/data/production_model.pkl" data/production_model.pkl
+          cp "$ARTIFACT_DIR/data/production_model_info.json" data/production_model_info.json
+          cp "$ARTIFACT_DIR/data/train.csv" data/train.csv
+          cp "$ARTIFACT_DIR/data/test.csv" data/test.csv
 
       - name: Ejecutar monitor
         id: monitor
