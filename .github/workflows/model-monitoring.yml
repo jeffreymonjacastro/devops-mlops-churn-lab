@@ -17,6 +17,7 @@ on:
 permissions:
   contents: read
   actions: write
+  issues: write
 
 jobs:
   monitor:
@@ -83,3 +84,10 @@ jobs:
         run: |
           echo "El monitor pidió reentrenar: se dispara mlops.yml"
           gh workflow run mlops.yml --ref "${{ github.ref_name }}"
+
+      - name: Crear issue por reentrenamiento requerido
+        if: steps.monitor.outputs.exit_code == '42'
+        run: |
+          gh issue create \
+            --title "Reentrenamiento requerido (corrida $GITHUB_RUN_ID)" \
+            --body "El monitor decidió REENTRENAR. Corrida: $GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"
