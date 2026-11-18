@@ -1,0 +1,18 @@
+groups:
+  - name: churn-model
+    rules:
+      - alert: ChurnModelRetrainNeeded
+        expr: model_retrain_needed == 1
+        for: 30s
+        labels:
+          severity: critical
+        annotations:
+          summary: "El monitor decidió REENTRENAR el modelo de churn"
+
+      - alert: ChurnModelHighDataDrift
+        expr: model_psi_max > 0.25
+        for: 1m
+        labels:
+          severity: warning
+        annotations:
+          summary: "El PSI máximo superó 0.25 durante un minuto"

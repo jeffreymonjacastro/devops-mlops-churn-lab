@@ -17,6 +17,7 @@ on:
 permissions:
   contents: read
   actions: write
+  issues: write
 
 jobs:
   monitor:
@@ -41,7 +42,12 @@ jobs:
             exit 1
           fi
           echo "Usando artefactos de la corrida $RUN_ID"
-          gh run download "$RUN_ID" --name production-artifacts --dir .
+          ARTIFACT_DIR=$(mktemp -d)
+          gh run download "$RUN_ID" --name production-artifacts --dir "$ARTIFACT_DIR"
+          cp "$ARTIFACT_DIR/data/production_model.pkl" data/production_model.pkl
+          cp "$ARTIFACT_DIR/data/production_model_info.json" data/production_model_info.json
+          cp "$ARTIFACT_DIR/data/train.csv" data/train.csv
+          cp "$ARTIFACT_DIR/data/test.csv" data/test.csv
 
       - name: Ejecutar monitor
         id: monitor
@@ -78,3 +84,10 @@ jobs:
         run: |
           echo "El monitor pidió reentrenar: se dispara mlops.yml"
           gh workflow run mlops.yml --ref "${{ github.ref_name }}"
+
+      - name: Crear issue por reentrenamiento requerido
+        if: steps.monitor.outputs.exit_code == '42'
+        run: |
+          gh issue create \
+            --title "Reentrenamiento requerido (corrida $GITHUB_RUN_ID)" \
+            --body "El monitor decidió REENTRENAR. Corrida: $GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"
