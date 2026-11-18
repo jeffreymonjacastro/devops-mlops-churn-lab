@@ -31,8 +31,11 @@ los detecta. Esta ficha es el registro de esas decisiones: se versiona junto al 
 | 4. Evaluación | Promover un modelo peor que el vigente | Champion / challenger | `src/evaluate_and_register.py` |
 | 5. Despliegue | La API sirve algo distinto a lo evaluado | Test de skew contra la API en ejecución | `tests/test_skew.py`, job `smoke-test` |
 | 5. Despliegue | Entradas inválidas llegan al modelo | Contrato en el esquema de la API (422) | `app/main.py` |
+| 5. Despliegue | Una imagen nueva no inicia o no queda sana | Circuit breaker revierte al último deployment completado; el script comprueba la revisión activa | `infra/main.tf`, `scripts/deploy_ecs.sh` |
 | 6. Monitoreo | Los datos de producción cambian | PSI + KS por feature, PSI de predicciones | `src/monitor.py` |
-| 6. Monitoreo | El modelo se degrada sin que cambien los datos | F1 con etiquetas tardías | `src/monitor.py`, `model-monitoring.yml` |
+| 6. Monitoreo | El modelo se degrada sin que cambien los datos | F1 en escenarios etiquetados; REENTRENAR dispara el pipeline | `src/monitor.py`, `.github/workflows/model-monitoring.yml` |
+| 6. Monitoreo | Drift crítico pasa inadvertido | Alertas por PSI máximo y decisión de reentrenamiento | `monitoring/prometheus/alerts.yml` |
+| 6. Monitoreo | La telemetría real se pierde al reemplazar una tarea ECS | Sin control aún: `logs/predictions.jsonl` es local al contenedor; falta persistirlo y conectar etiquetas reales al monitor | `app/main.py`, pendiente de almacenamiento durable |
 
 ## Decisiones registradas
 
